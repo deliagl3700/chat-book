@@ -1,0 +1,30 @@
+/* You can add global styles to this file, and also import other style files */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.message {
+  max-width: 60%;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.me {
+  align-self: flex-end;
+  background-color: #dcf8c6;
+}
+
+.other {
+  align-self: flex-start;
+  background-color: #fff;
+  border: 1px solid #ccc;
+}
+
+.meta {
+  font-size: 10px;
+  text-align: right;
+  opacity: 0.6;
+}

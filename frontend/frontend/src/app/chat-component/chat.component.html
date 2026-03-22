@@ -1,0 +1,15 @@
+<div class="chat-container">
+  <div *ngFor="let msg of messages"
+       [ngClass]="{'me': msg.isMe, 'other': !msg.isMe}"
+       class="message">
+
+    <div class="text">
+      {{ msg.text }}
+    </div>
+
+    <div class="meta">
+      {{ msg.author }}
+    </div>
+
+  </div>
+</div>
