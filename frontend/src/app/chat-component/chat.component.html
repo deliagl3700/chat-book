@@ -1,15 +1,27 @@
+
 <div class="chat-container">
-  <div *ngFor="let msg of messages"
-       [ngClass]="{'me': msg.isMe, 'other': !msg.isMe}"
-       class="message">
+  <div *ngFor="let msgG of messages">
+      <div class="date-header">
+        {{ msgG.date | date:'d MMMM yyyy' }}
+      </div>
+      <div class="chat-container">
+      <div *ngFor="let msg of msgG.messages"
+          [ngClass]="{'me': msg.isMe, 'other': !msg.isMe}"
+          class="message">
 
-    <div class="text">
-      {{ msg.text }}
-    </div>
-
-    <div class="meta">
-      {{ msg.author }}
-    </div>
-
-  </div>
+        <div class="text">
+          {{ msg.text }}
+        </div>
+          <div *ngIf="msg.stickerUrl">
+            <img src={{msg.stickerUrl}} class="sticker" />
+          </div>
+          <div *ngIf="msg.imageUrl">
+            <img src={{msg.imageUrl}}  class="image" />
+          </div>
+        <div class="meta">
+          {{ msg.date | date:'HH:mm' }}
+        </div>
 </div>
+      </div>
+  </div>
+</div> 

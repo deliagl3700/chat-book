@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #e5ddd5;
+  padding: 20px;
+}
+
+.chat {
+  display: flex;
+  flex-direction: column;
+}
+
+.message {
+  max-width: 60%;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.me {
+  align-self: flex-end;
+  background: #dcf8c6;
+}
+
+.other {
+  align-self: flex-start;
+  background: white;
+}
+
+.meta {
+  font-size: 10px;
+  text-align: right;
+  opacity: 0.6;
+}
+.sticker {
+  width: 120px;
+}
+</style>
+</head>
+
+<body>
+<div class="chat">
+  {{MESSAGES}}
+
+</div>
+</body>
+</html>

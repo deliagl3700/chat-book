@@ -4,6 +4,7 @@
 data/
 *.txt
 *.json
+backend/**/*.pdf
 
 src/assets/chat-media/
 assets/chat-media/

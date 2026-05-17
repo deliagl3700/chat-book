@@ -3,14 +3,17 @@ using System.Text.RegularExpressions;
 
 public class ChatParser
 {
-    public List<Message> Parse(string path, string myName, string? untilDate = null)
+    public List<MessagesByDate> Parse(string path, string myName, string? untilDate = null)
     {
         var lines = File.ReadAllLines(path, Encoding.UTF8);
 
         var messages = new List<Message>();
         Message? current = null;
 
-        var startRegex = new Regex(@"^\[(.*?)\]\s(.*?):\s(.*)");
+        var startRegex = new Regex(@"^\s*\[(.*?)\]\s(.*?):\s(.*)");
+        var stickerRegex = new Regex(@"<adjunto:\s(.*?\.webp)>");
+        var photoRegex = new Regex(@"<adjunto:\s(.*?\.(jpg|jpeg|png))>");
+
 
         foreach (var line in lines)
         {
@@ -19,20 +22,32 @@ public class ChatParser
             {
                 break;
             }
-
-            var match = startRegex.Match(line);
+            var lineClean = line.TrimStart('\u200E', '\u200F', '\u202A', '\u202C');
+            var match = startRegex.Match(lineClean);
 
             if (match.Success)
             {
-                // Nueva línea de mensaje
                 current = new Message
                 {
                     Author = match.Groups[2].Value,
-                    Text = match.Groups[3].Value,
-                    Date = DateTime.Now, // luego parseas si quieres
+                    Text = match.Groups[3].Value.Replace( "<Se editó este mensaje.>",string.Empty),
+                    Date = DateTime.Parse(match.Groups[1].Value),
                     IsMe = match.Groups[2].Value == myName
                 };
 
+                var matchSticker = stickerRegex.Match(current.Text);
+                var matchPhoto = photoRegex.Match(current.Text);
+                if (matchPhoto.Success)
+                {
+                    current.ImageUrl = $"assets/{matchPhoto.Groups[1].Value}";
+                    current.Text = null;
+                }
+                else
+                if (matchSticker.Success)
+                {
+                    current.StickerUrl = $"assets/{matchSticker.Groups[1].Value}";
+                    current.Text = null;
+                }
                 messages.Add(current);
             }
             else
@@ -44,8 +59,8 @@ public class ChatParser
                 }
             }
         }
-
-        return messages;
+        var messagesByDate = messages.GroupBy(x=>x.Date.Date).Select(x=> new MessagesByDate { Date = x.Key, messages = x.ToList() }).ToList();
+        return messagesByDate;
     }
     public List<Message> Parse2(string path, string myName, string? untilDate = null)
     {

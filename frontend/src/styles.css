@@ -3,13 +3,42 @@
   display: flex;
   flex-direction: column;
   padding: 20px;
+
+  background-image: url('/assets/chat-bg.png');
+  background-repeat: repeat;   
+  background-size: auto;      
 }
+
+
+.date-header {
+  display: flex;
+  align-items: center;
+  margin: 12px 270px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: lightgrey;
+  color: #4a4a4a;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: capitalize;
+  width: 200px;
+  justify-content: center;
+}
+
 
 .message {
   max-width: 60%;
   margin-bottom: 10px;
   padding: 10px;
   border-radius: 10px;
+}
+
+.sticker {
+  width: 120px;
+}
+
+.image {
+  width: 200px;
 }
 
 .me {
