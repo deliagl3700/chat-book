@@ -1,24 +1,33 @@
 
 <div class="chat-container">
-  <div *ngFor="let msgG of messages">
-      <div class="date-header">
-        {{ msgG.date | date:'d MMMM yyyy' }}
-      </div>
-      <div class="chat-container">
-      <div *ngFor="let msg of msgG.messages"
-          [ngClass]="{'me': msg.isMe, 'other': !msg.isMe}"
-          class="message">
+  <div *ngFor="let msgG of messages;">
+      <div style="display: flex; justify-content: center;">
+        <div class="date-header">
+          {{ msgG.date | date:'d MMMM yyyy' }}
+        </div> 
+      </div>  
+    <div class="chat-container">
+      <div *ngFor="let msg of msgG.messages;"
+          [ngClass]="{'me': msg.isMe, 'other': !msg.isMe, 'sticker-message': msg.stickerUrl}"
+          class="message"> 
+              
+        <div *ngIf="msg.stickerUrl">
+          <img src={{msg.stickerUrl}} class="sticker" />
+        </div> 
 
-        <div class="text">
-          {{ msg.text }}
+        <div *ngIf="msg.imageUrl"> 
+          <img src={{msg.imageUrl}}  class="image" />  
+        </div> 
+
+        <div *ngIf="msg.qrCode" class="audio-block">  
+          <img src="{{msg.qrCode}}" class="qr" /> 
+          <div *ngIf="msg.audioUrl" class="qr-text">🔊</div>
+          <div *ngIf="msg.videoUrl" class="qr-text">📽️</div>
         </div>
-          <div *ngIf="msg.stickerUrl">
-            <img src={{msg.stickerUrl}} class="sticker" />
-          </div>
-          <div *ngIf="msg.imageUrl">
-            <img src={{msg.imageUrl}}  class="image" />
-          </div>
-        <div class="meta">
+        <div *ngIf="msg.text" class="text">    
+        {{ msg.text }}    
+        </div>
+        <div class="meta"> 
           {{ msg.date | date:'HH:mm' }}
         </div>
 </div>

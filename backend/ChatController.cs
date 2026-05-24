@@ -50,7 +50,7 @@ public class ChatController : ControllerBase
 
         return html.Replace("{{MESSAGES}}", sb.ToString());
     }
-
+  
     public async Task GeneratePdf(string html)
     {
         using var playwright = await Playwright.CreateAsync();

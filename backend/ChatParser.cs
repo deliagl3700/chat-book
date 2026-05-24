@@ -1,6 +1,7 @@
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
-
+using QRCoder;
 public class ChatParser
 {
     public List<MessagesByDate> Parse(string path, string myName, string? untilDate = null)
@@ -13,7 +14,14 @@ public class ChatParser
         var startRegex = new Regex(@"^\s*\[(.*?)\]\s(.*?):\s(.*)");
         var stickerRegex = new Regex(@"<adjunto:\s(.*?\.webp)>");
         var photoRegex = new Regex(@"<adjunto:\s(.*?\.(jpg|jpeg|png))>");
+        var audioRegex = new Regex(@"<adjunto:\s(.*?\.opus)>");
+        var videoRegex = new Regex(@"<adjunto:\s(.*?\.mp4)>");
+        var json = File.ReadAllText("data/media-map.json");
 
+        var mediaList = JsonSerializer.Deserialize<List<MediaItem>>(json, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
 
         foreach (var line in lines)
         {
@@ -37,74 +45,97 @@ public class ChatParser
 
                 var matchSticker = stickerRegex.Match(current.Text);
                 var matchPhoto = photoRegex.Match(current.Text);
+                var matchAudio = audioRegex.Match(current.Text);
+                var matchVideo = videoRegex.Match(current.Text);
+
                 if (matchPhoto.Success)
                 {
-                    current.ImageUrl = $"assets/{matchPhoto.Groups[1].Value}";
-                    current.Text = null;
+                    current = TreatImageData(messages, current, photoRegex, matchPhoto);
                 }
-                else
-                if (matchSticker.Success)
+                else if (matchSticker.Success)
                 {
                     current.StickerUrl = $"assets/{matchSticker.Groups[1].Value}";
                     current.Text = null;
+                } else if (matchAudio.Success)
+                {
+                    current.AudioUrl = $"{matchAudio.Groups[1].Value}";
+                    var url =  mediaList?.Find(x=>x.FileName == current.AudioUrl)?.Url ?? string.Empty;
+                    current.AudioUrl = url;
+                    current.QrCode = GenerateQrBase64(url);
+                    current.Text = null;
+                }else if (matchVideo.Success)
+                {
+                    current.VideoUrl = $"{matchVideo.Groups[1].Value}";
+                    var url =  mediaList?.Find(x=>x.FileName == current.VideoUrl)?.Url ?? string.Empty;
+                    current.VideoUrl = url;
+                    current.QrCode = GenerateQrBase64(url);
+                    current.Text = null;
                 }
-                messages.Add(current);
+                if (current != null)
+                {
+                    messages.Add(current);
+                }
             }
             else
             {
                 // Continuación del mensaje anterior
-                if (current != null)
-                {
-                    current.Text += "\n" + line;
-                }
+                current?.Text += "\n" + line;
             }
         }
         var messagesByDate = messages.GroupBy(x=>x.Date.Date).Select(x=> new MessagesByDate { Date = x.Key, messages = x.ToList() }).ToList();
         return messagesByDate;
     }
-    public List<Message> Parse2(string path, string myName, string? untilDate = null)
+
+    private static Message? TreatImageData(List<Message> messages, Message? current, Regex photoRegex, Match matchPhoto)
     {
-        var lines = File.ReadAllLines(path, Encoding.UTF8);
-        var regex = new Regex(@"^\[(.*?)\]\s(.*?):\s([\s\S]*)$");
-        var imageRegex = new Regex(@"<attached:\s(.*?)>");
+        var imagePath = $"assets/{matchPhoto.Groups[1].Value}";
 
-        var messages = new List<Message>();
+        // Eliminar solo la etiqueta de adjunto y obtener el texto restante
+        var remainingText = photoRegex.Replace(current.Text ?? string.Empty, string.Empty).Trim();
 
-        foreach (var line in lines)
+        if (!string.IsNullOrWhiteSpace(remainingText))
         {
-            // Detener si se encuentra la fecha especificada
-            if (untilDate != null && line.StartsWith($"[{untilDate}"))
+
+            var imgMsg = new Message
             {
-                break;
-            }
-
-            var match = regex.Match(line);
-            if (!match.Success) continue;
-
-            var text = match.Groups[3].Value;
-
-            var msg = new Message
-            {
-                Date = DateTime.Parse(match.Groups[1].Value),
-                Author = match.Groups[2].Value,
-                IsMe = match.Groups[2].Value == myName
+                Author = current.Author,
+                ImageUrl = imagePath,
+                Date = current.Date,
+                IsMe = current.IsMe
             };
+            messages.Add(imgMsg);
 
-            var imgMatch = imageRegex.Match(text);
-
-            if (imgMatch.Success)
+            var textMsg = new Message
             {
-                msg.ImageUrl = $"assets/chat-media/{imgMatch.Groups[1].Value}";
-                msg.Text = imageRegex.Replace(text, "").Trim();
-            }
-            else
-            {
-                msg.Text = text;
-            }
+                Author = current.Author,
+                Text = remainingText,
+                Date = current.Date,
+                IsMe = current.IsMe
+            };
+            messages.Add(textMsg);
 
-            messages.Add(msg);
+            // Evitar añadir el objeto `current` original más abajo
+            current = null;
+        }
+        else
+        {
+            current.ImageUrl = imagePath;
+            current.Text = null;
         }
 
-        return messages;
+        return current;
+    }
+
+    public string GenerateQrBase64(string url)
+    {
+        using var qrGenerator = new QRCodeGenerator();
+        var payload = new PayloadGenerator.Url(url);
+        using var qrCodeData = QRCodeGenerator.GenerateQrCode(payload);
+        var qrCode = new PngByteQRCode(qrCodeData);
+
+        var qrBytes = qrCode.GetGraphic(40);
+        var base64 = Convert.ToBase64String(qrBytes);
+
+        return $"data:image/png;base64,{base64}";
     }
 }

@@ -12,4 +12,8 @@ public class Message
     public bool IsMe { get; set; }
     public string? StickerUrl { get; set; }
     public string? ImageUrl { get; set; }
+    public string? AudioUrl { get; set; }
+    public string? VideoUrl { get; set; }
+
+    public string? QrCode { get; set; } 
 }
