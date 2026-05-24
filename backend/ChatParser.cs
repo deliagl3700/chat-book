@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -54,7 +55,7 @@ public class ChatParser
                 }
                 else if (matchSticker.Success)
                 {
-                    current.StickerUrl = $"assets/{matchSticker.Groups[1].Value}";
+                    current.StickerUrl = ToBase64Image($"assets/{matchSticker.Groups[1].Value}", "image/webp");
                     current.Text = null;
                 } else if (matchAudio.Success)
                 {
@@ -82,24 +83,43 @@ public class ChatParser
                 current?.Text += "\n" + line;
             }
         }
-        var messagesByDate = messages.GroupBy(x=>x.Date.Date).Select(x=> new MessagesByDate { Date = x.Key, messages = x.ToList() }).ToList();
-        return messagesByDate;
+
+        var messagesByDate = messages
+        .GroupBy(m => new { m.Date.Year, m.Date.Month })
+        .Select(month => new MessagesByDate
+        {
+        Year = month.Key.Year,
+        Month = month.Key.Month,
+        dayGroup = month
+            .GroupBy(m => m.Date.Date)
+            .Select(day => new DayGroup
+            {
+                Date = day.Key,
+                Messages = day.ToList()
+            })
+            .ToList()
+        })
+        .ToList();
+         return messagesByDate;
     }
 
     private static Message? TreatImageData(List<Message> messages, Message? current, Regex photoRegex, Match matchPhoto)
     {
         var imagePath = $"assets/{matchPhoto.Groups[1].Value}";
 
-        // Eliminar solo la etiqueta de adjunto y obtener el texto restante
-        var remainingText = photoRegex.Replace(current.Text ?? string.Empty, string.Empty).Trim();
+        // Eliminar solo la etiqueta de adjunto y obtener el texto restante.
+        // Quitar caracteres invisibles de formato y normalizar espacios.
+        var remainingText = photoRegex.Replace(current.Text ?? string.Empty, string.Empty);
+        remainingText = Regex.Replace(remainingText, @"\p{Cf}", string.Empty);
+        remainingText = Regex.Replace(remainingText, @"[\s]+", " ").Trim();
+        remainingText = remainingText.Length == 0 ? null : remainingText;
 
-        if (!string.IsNullOrWhiteSpace(remainingText))
+        if (remainingText != null)
         {
-
             var imgMsg = new Message
             {
                 Author = current.Author,
-                ImageUrl = imagePath,
+                ImageUrl = ToBase64Image(imagePath, "image/jpg"),
                 Date = current.Date,
                 IsMe = current.IsMe
             };
@@ -119,13 +139,20 @@ public class ChatParser
         }
         else
         {
-            current.ImageUrl = imagePath;
+            current.ImageUrl = ToBase64Image(imagePath, "image/jpg");
             current.Text = null;
         }
 
         return current;
     }
 
+    public static string ToBase64Image(string filePath, string mimeType)
+    {
+        var bytes = File.ReadAllBytes(filePath);
+        var base64 = Convert.ToBase64String(bytes);
+        return $"data:{mimeType};base64,{base64}";
+    }
+    
     public string GenerateQrBase64(string url)
     {
         using var qrGenerator = new QRCodeGenerator();

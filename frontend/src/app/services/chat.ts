@@ -14,4 +14,18 @@ export class ChatService {
   getMessages(): Observable<any[]> {
     return this.http.get<any[]>(this.apiUrl);
   }
+
+  generatePdf(html: string): void {
+    this.http.post('http://localhost:5196/api/chat/pdf', html, {
+      responseType: 'blob',
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8'
+      }
+    }).subscribe(blob => {
+      const url = window.URL.createObjectURL(blob);
+      window.open(url);
+    }, error => {
+      console.error('Error generando PDF', error);
+    });
+  }
 }

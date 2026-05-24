@@ -1,15 +1,24 @@
-export interface Message {
-    text: string;
-    autor: string;
-    date: Date;
-    isMe: boolean;
-    stickerUrl?: string;
-    imageUrl?: string;
-    audioUrl?: string;
-    videoUrl?: string;
-    qrCode?: string;
+
+interface ChatMessage {
+  text?: string;
+  author: string;
+  date: string;
+  isMe: boolean;
+  stickerUrl?: string;
+  imageUrl?: string;
+  audioUrl?: string;
+  videoUrl?: string;
+  qrCode?: string;
 }
-export interface MessagesByDate {
-    date: Date;
-    messages: Message[];
+
+interface DayGroup {
+  date: string;
+  messages: ChatMessage[];
+}
+
+interface MessagesByDate {
+  year: number;
+  month: number;
+  monthName: string;
+  dayGroup: DayGroup[];
 }

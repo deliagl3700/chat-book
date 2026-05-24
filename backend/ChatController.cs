@@ -15,43 +15,28 @@ public class ChatController : ControllerBase
         return Ok(messages);
     }
 
-    [HttpGet("pdf")]
+   [HttpPost("pdf")]
     public async Task<IActionResult> GetPdf()
     {
-        var parser = new ChatParser();
+        string htmlbody;
+        using (var reader = new StreamReader(Request.Body, Encoding.UTF8))
+        {
+            htmlbody = await reader.ReadToEndAsync();
+        }
 
-        var messages = parser.Parse("data/chat.txt", "Sergito 🤍","1/1/22");
-        var html = GenerateHtml(messages);
+        if (string.IsNullOrWhiteSpace(htmlbody))
+        {
+            return BadRequest("Empty body");
+        }
 
-        await GeneratePdf(html);
+        await GeneratePdf(htmlbody);
 
         var bytes = System.IO.File.ReadAllBytes("chat.pdf");
 
         return File(bytes, "application/pdf", "chat.pdf");
     }
 
-  public string GenerateHtml(List<MessagesByDate> messages)
-    {
-        var html =  System.IO.File.ReadAllText("templates/chat.html");
-
-        var sb = new StringBuilder();
-
-        foreach (var msg in messages.SelectMany(x=>x.messages))
-        {
-            var cssClass = msg.IsMe ? "me" : "other";
-
-            sb.Append($@"
-            <div class='message {cssClass}'>
-                <div>{System.Net.WebUtility.HtmlEncode(msg.Text)}</div>
-                <div class='meta'>{msg.Author}</div>
-            </div>
-            ");
-        }
-
-        return html.Replace("{{MESSAGES}}", sb.ToString());
-    }
-  
-    public async Task GeneratePdf(string html)
+    public async Task GeneratePdf(string htmlbody)
     {
         using var playwright = await Playwright.CreateAsync();
 
@@ -61,13 +46,32 @@ public class ChatController : ControllerBase
         });
 
         var page = await browser.NewPageAsync();
-
+        var css = System.IO.File.ReadAllText("wwwroot/styles.css");
+        var html = $@"
+                <html>
+                <head>
+                <style>
+                {css}
+                </style>
+                </head>
+                <body>
+                {htmlbody}
+                </body>
+            </html>";
         await page.SetContentAsync(html);
 
         await page.PdfAsync(new()
         {
             Path = "chat.pdf",
-            Format = "A4"
+            Format = "A4",
+            PrintBackground = true,
+            Margin = new()
+            {
+                Top = "20mm",
+                Bottom = "20mm",
+                Left = "10mm",
+                Right = "10mm"
+            }
         });
 
         await browser.CloseAsync();

@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChatService } from '../services/chat';
+
 
 @Component({
   selector: 'app-chat',
@@ -12,6 +13,9 @@ export class ChatComponent implements OnInit {
 
   messages: any[] = [];
   dateHeader: Date = new Date();
+  
+  @ViewChild('chatContent') chatContent!: ElementRef;
+
   constructor(private chatService: ChatService) {}
 
   ngOnInit(): void {
@@ -21,7 +25,9 @@ export class ChatComponent implements OnInit {
     });
   }
 
-  trackByFn(index: number, item: any): any {
-    return index; // or any unique identifier of the message
+  exportPdf(): void {
+    if (!this.chatContent) return;
+    this.chatService.generatePdf(this.chatContent.nativeElement.outerHTML);
   }
+
 }
