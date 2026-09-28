@@ -13,7 +13,8 @@ builder.Services.AddCors(options =>
                       .AllowAnyHeader()
                       .AllowAnyMethod());
 });
-
+builder.Services.AddSingleton<PdfBrowserService>();
+builder.Services.AddHostedService<PdfBrowserWarmup>();
 var app = builder.Build();
 
 app.UseCors("AllowAll");

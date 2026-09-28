@@ -1,12 +1,13 @@
-<div class="export-container">
+<div  class="export-container">
   <button class="export-btn" (click)="exportPdf()">📥 Descargar PDF</button>
 </div>
 
+
 <div class="chat-container" #chatContent>
-  <div *ngFor="let monthGroup of messages;">
-      <div class="month-header">
-        {{ monthGroup.monthName }} {{ monthGroup.year }}
-      </div>
+  <div *ngFor="let monthGroup of messages;"> 
+    <div class="month-header">
+      {{ monthGroup.monthName }} {{ monthGroup.year }}
+    </div>
 
     <div *ngFor="let dayGroup of monthGroup.dayGroup;">
       <div style="display: flex; justify-content: center; margin-top: 12px;">
@@ -16,30 +17,49 @@
       </div>
 
       <div class="chat-container-msg">
-        <div *ngFor="let msg of dayGroup.messages;"
-            [ngClass]="{'me': msg.isMe, 'other': !msg.isMe, 'sticker-message': msg.stickerUrl}"
-            class="message">
-
-          <div *ngIf="msg.stickerUrl">
-            <img src="{{msg.stickerUrl}}" class="sticker" />
+        <ng-container *ngFor="let item of dayGroup.messageGroups;">
+          <div *ngIf="item.type === 'stickerRow'" [ngClass]="{'me-row': item.isMe, 'other-row': !item.isMe}" class="sticker-row">
+            <div *ngFor="let msg of item.messages"
+                 [ngClass]="{'me': msg.isMe, 'other': !msg.isMe, 'sticker-message': msg.stickerUrl}"
+                 class="message">
+              <div *ngIf="msg.stickerUrl">
+                <img  [src]="msg.stickerUrl" class="sticker" />
+              </div>
+              <div class="meta">
+                {{ msg.date | date:'HH:mm' }}
+              </div>
+            </div>
           </div>
 
-          <div *ngIf="msg.imageUrl">
-            <img src="{{msg.imageUrl}}" class="image" />
-          </div>
+          <div *ngIf="item.type === 'message'" [ngClass]="{'me': item.message.isMe, 'other': !item.message.isMe, 'sticker-message': item.message.stickerUrl}" class="message">
+            <div *ngIf="item.message.stickerUrl">
+              <img [src]="item.message.stickerUrl" class="sticker" /> 
+            </div>
 
-          <div *ngIf="msg.qrCode" class="audio-block">
-            <img src="{{msg.qrCode}}" class="qr" />
-            <div *ngIf="msg.audioUrl" class="qr-text">🔊</div>
-            <div *ngIf="msg.videoUrl" class="qr-text">📽️</div>
-          </div>
+            <div *ngIf="item.message.imageUrl">
+              <img [src]="item.message.imageUrl" class="image" />
+            </div>
 
-          <div *ngIf="msg.text" class="text">
-            {{ msg.text }}
-          </div>
+            <div *ngIf="item.message.qrCode" class="audio-block">
+              <img  [src]="item.message.qrCode" class="qr" />
+              <div class="qr-links">
+                <a *ngIf="item.message.audioUrl" class="qr-text" [href]="item.message.audioUrl" target="_blank">🔊</a>
+                <a *ngIf="item.message.videoUrl" class="qr-text" [href]="item.message.videoUrl" target="_blank">📽️</a>
+              </div>
+            </div> 
+  
+            <div *ngIf="item.message.text" class="text">
+              {{ item.message.text }}
+            </div>  
 
-          <div class="meta">
-            {{ msg.date | date:'HH:mm' }}
+            <div class="meta">
+              {{ item.message.date | date:'HH:mm' }}
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
   </div>
 </div>
+
 

@@ -100,11 +100,11 @@
 }
 
 .sticker {
-  width: 80px;
+  width: 100px;
 }
 
 .image {
-  width: 100px;
+  width: 130px;
 }
 
 .me {
@@ -127,8 +127,19 @@
 }
 
 .audio-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
   padding: 10px;
+  gap: 6px;
+}
+
+.qr-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
 
 .qr {
@@ -139,10 +150,34 @@
 
 .qr-text {
   font-size: 20px;
+  line-height: 1;
 }
 
 .message.sticker-message {
   background-color: transparent;
   box-shadow: none;
   border: none;
-}  
+  max-width: none;
+  width: auto;
+  padding: 6px 8px 4px;
+}
+
+.sticker-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.sticker-row.me-row {
+  justify-content: flex-end;
+}
+
+.sticker-row.other-row {
+  justify-content: flex-start;
+}
+
+.sticker-row .message {
+  margin-bottom: 0;
+}
